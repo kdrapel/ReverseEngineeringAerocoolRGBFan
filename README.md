@@ -11,6 +11,8 @@ After verifying all cables and trying several times to reconnect the SATA power,
 
 <img src="https://user-images.githubusercontent.com/12449790/222847108-f93eb58c-3733-4bc3-81fd-aeeb27f4ec28.png" width="20%" >
 
-By default, the RGB effect on these fans is some kind of rotating rainbow. As no other device is attached to the fans (no hub or controller), *something* in one of the fan must be generating a signal that was used to drive the led stripes. Moreover the same exact effect was present in all fans before they failed and they were perfectly synchronized. No information about the protocol being used on the data line is available and the documentation of Aerocool was not helpful to figure out anything regarding the pinouts.
+By default, the RGB effect on these fans is some kind of rotating rainbow. As no other device is attached to the fans (no hub or controller), *something* in one of the fan must be generating a signal that was used to drive the led stripes. Moreover the same exact effect was present in all fans before they failed and they were perfectly synchronized before the failure (see picture below) confirming that the 4th wire was actually used to share the same data across all fans. No information about the protocol being used on the data line is available and the documentation of Aerocool was not helpful to figure out anything regarding the pinouts.
+
+<img src="https://user-images.githubusercontent.com/12449790/222851897-d08e5391-6db4-41fa-987f-d0d9c0ed86b9.png" width="20%" /> 
 
 As I had little faith in being able to fix the problem - I was first suspecting a nasty microscopic shortcut in one of these wires - I decided to unmount all fans, order another set of hopefully better fans from a different manufacturer (Be Quiet) meanwhile and try to understand how this thing was supposed to work.
