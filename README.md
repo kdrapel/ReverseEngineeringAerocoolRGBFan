@@ -50,5 +50,9 @@ This IC was either defect, got shorted or subject to some current spikes and fai
 
 <img src="https://user-images.githubusercontent.com/12449790/223828801-5eb8812a-428b-4933-a45e-4352ddba71d0.png" width="20%" />
 
+## Getting some Insights about the Protocol
+As I was mainly interested into the color strips, I left the +12V line aside to focus on the GND/Data/5V part. I grabbed my old Diecimila Arduino board that had not be used for something like 8 years and prepared a small test setup. As everything is driven by a single data line, I made the hypothesis that the manufacturer probably had used a common and cheap solution present in many RGB lights and strips: the WS2812B serial protocol. I will not go into details about WS2812B itself but the idea is basically to send a stream of bits along the data line with one packet per led. When a led receives the stream, it takes a given number of bits (that correspond to the colors), remove them from the rest of the stream and pass that result to the next led. And so on until no bits are left and all of them have been consumed by the leds 
+
+
 
 
