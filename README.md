@@ -5,16 +5,16 @@ This article describes some analysis performed on a defective Aerocool fan. Mode
 ## Defect Description
 The fan was part of a Trinity White Tower V3 made by Aerocool and shipped with two front fans of 14 cm and one back fan of 12 cm, all of them with a flashy RGB effect out of the box. After only a few startups, the lower front fan was displaying a steady white color in one corner. The rest of the fans were not illuminated (hue in the upper fan in the picture is coming from some backlights). 
 
-<img src="https://user-images.githubusercontent.com/12449790/222844467-a7b4a56f-69a4-4225-8512-cd9ee8be95d3.png" width="30%" >
+<img src="https://user-images.githubusercontent.com/12449790/222844467-a7b4a56f-69a4-4225-8512-cd9ee8be95d3.png" >
 
 ## First Thoughts
 After verifying all cables and trying several times to reconnect the SATA power, I came to the conclusion that some electronical issue was present and somehow explain the low cost of the whole unit. Each fan has four wires. The first fan has a special connector such that the daisy-chained set of fans can be powered by a single SATA power cable. The last wire, which is not wired to the SATA power connector, is clearly dedicated to some data line and this data line is shared across all the fans.
 
-<img src="https://user-images.githubusercontent.com/12449790/222847108-f93eb58c-3733-4bc3-81fd-aeeb27f4ec28.png" width="20%" >
+<img src="https://user-images.githubusercontent.com/12449790/222847108-f93eb58c-3733-4bc3-81fd-aeeb27f4ec28.png" >
 
 By default, the RGB effect on these fans is some kind of rotating rainbow. As no other device is attached to the fans (no hub or controller), *something* in one of the fan must be generating a signal that was used to drive the led stripes. Moreover the same exact effect was present in all fans before they failed and they were perfectly synchronized before the failure (see picture below) confirming that the 4th wire was actually used to share the same data across all fans. No information about the protocol being used on the data line is available and the documentation of Aerocool was not helpful to figure out anything regarding the pinouts.
 
-<img src="https://user-images.githubusercontent.com/12449790/222851897-d08e5391-6db4-41fa-987f-d0d9c0ed86b9.png" width="20%" /> 
+<img src="https://user-images.githubusercontent.com/12449790/222851897-d08e5391-6db4-41fa-987f-d0d9c0ed86b9.png"  /> 
 
 As I had little faith in being able to fix the problem - I was first suspecting a nasty microscopic shortcut in one of these wires - I decided to unmount all fans, order another set of hopefully better fans from a different manufacturer (Be Quiet) meanwhile and try to understand how this thing was supposed to work.
 
@@ -27,7 +27,7 @@ From top to bottom on the picture:
 * GND, yellow wire
 * White
 * +5V, black wire at bottom
-<img src="https://user-images.githubusercontent.com/12449790/223825532-b59d7e27-6e44-4b00-95dc-e715f6ed67d0.png" width="20%" /> 
+<img src="https://user-images.githubusercontent.com/12449790/223825532-b59d7e27-6e44-4b00-95dc-e715f6ed67d0.png"  /> 
 
 This pattern *confirms that the white must be some kind of serial line* dedicated to color commands as the other wires are only for power.
 
@@ -43,13 +43,13 @@ The 2nd part
 * GND (yellow)
 * IN (white), corresponds to the serial data line 
 * +5V (red)
-<img src="https://user-images.githubusercontent.com/12449790/223826454-7d1ffd0f-6624-44f2-a5d4-564fff089b72.png" width="20%" />
+<img src="https://user-images.githubusercontent.com/12449790/223826454-7d1ffd0f-6624-44f2-a5d4-564fff089b72.png" />
 
 Next to these connections, I discovered a small IC with a very suspicious black spot on top. Scratching it with the finger nail leaves some charcoal residue, it is definitely burnt. Now I get a full picture of the failure and concludes that this IC is the *brain* and is directly commanding the data line. As this data line is then shared with other fans, it can send the same signal to all fans that are connected to the main one (and thus have colors in sync).
 
 This IC was either defect, got shorted or subject to some current spikes and failed after a few startups.
 
-<img src="https://user-images.githubusercontent.com/12449790/223828801-5eb8812a-428b-4933-a45e-4352ddba71d0.png" width="20%" />
+<img src="https://user-images.githubusercontent.com/12449790/223828801-5eb8812a-428b-4933-a45e-4352ddba71d0.png" />
 
 ## Getting some Insights about the Protocol
 As I was mainly interested into the color strips, I left the +12V line aside to focus on the GND/Data/5V part. As everything is driven by a single data line, I made the hypothesis that the manufacturer probably had used a common and cheap solution present in many RGB lights and strips: the *WS2812B serial protocol*. 
@@ -59,7 +59,7 @@ I will not go into details about WS2812B itself but the idea is basically to sen
 ### Arduino
 I grabbed my old Diecimila Arduino board that had not be used for something like 8 years and prepared a small test setup. I struggled a bit with the Arduino on my computer and the new IDE, the Diecimila is using an ATMEGA 168 (you must explicitely indicate that in the IDE configuration) but I still could not get it to work - the upload was failing. After some googling, I found out that you  have to install some FTDI drivers (https://learn.sparkfun.com/tutorials/how-to-install-ftdi-drivers/all).
 
-<img src="https://user-images.githubusercontent.com/12449790/224155456-6408333d-b909-44c4-9687-42769fbb8161.png" width="20%" />
+<img src="https://user-images.githubusercontent.com/12449790/224155456-6408333d-b909-44c4-9687-42769fbb8161.png" />
 
 ### Preparing FastLED sketch
 There are many tutorials about interfacing an Arduino with a WS2812b strip, I picked that one which is great and pretty complete, installed the FastLED library and picked the provided sketch without any modification: https://randomnerdtutorials.com/guide-for-ws2812b-addressable-rgb-led-strip-with-arduino/
@@ -68,7 +68,7 @@ It is usually wiser to use an external power supply as the leds are drawing a lo
 
 On the picture below, you will find the pin configuration on the connectors provided with the Aerocool fans. As said before, the 12V is not connected as I was not interested into making them rotate.
 
-<img src="https://user-images.githubusercontent.com/12449790/224157893-d9a9e226-cf2c-4ca9-b017-b48bd0095aea.png" width="20%" />
+<img src="https://user-images.githubusercontent.com/12449790/224157893-d9a9e226-cf2c-4ca9-b017-b48bd0095aea.png" />
 
 The fan immediately starts to display colorful patterns which are totally in line with the description of the palettes provided by the sketch in the tutorial. This was the confirmation they are using a plain WS2812b protocol and that you could reuse them for another application without particular tweaks.
 
