@@ -1,6 +1,7 @@
 # Reverse Engineering of an AeroCool RGB Fan 
 
 This article describes some analysis performed on a defective Aerocool fan. Model is WX-14025 (14 cm), "Made in China" with a sticker indicating 12V-DC 0.25A on the back. 
+
 ## Defect Description
 The fan was part of a Trinity White Tower V3 made by Aerocool and shipped with two front fans of 14 cm and one back fan of 12 cm, all of them with a flashy RGB effect out of the box. After only a few startups, the lower front fan was displaying a steady white color in one corner. The rest of the fans were not illuminated (hue in the upper fan in the picture is coming from some backlights). 
 
@@ -51,8 +52,36 @@ This IC was either defect, got shorted or subject to some current spikes and fai
 <img src="https://user-images.githubusercontent.com/12449790/223828801-5eb8812a-428b-4933-a45e-4352ddba71d0.png" width="20%" />
 
 ## Getting some Insights about the Protocol
-As I was mainly interested into the color strips, I left the +12V line aside to focus on the GND/Data/5V part. I grabbed my old Diecimila Arduino board that had not be used for something like 8 years and prepared a small test setup. As everything is driven by a single data line, I made the hypothesis that the manufacturer probably had used a common and cheap solution present in many RGB lights and strips: the *WS2812B serial protocol*. 
+As I was mainly interested into the color strips, I left the +12V line aside to focus on the GND/Data/5V part. As everything is driven by a single data line, I made the hypothesis that the manufacturer probably had used a common and cheap solution present in many RGB lights and strips: the *WS2812B serial protocol*. 
 
 I will not go into details about WS2812B itself but the idea is basically to send a stream of bits along the data line with one packet per led. When a led receives the stream, it takes a given number of bits (that correspond to the colors), remove them from the rest of the stream and pass that result to the next led. And so on until no bits are left and all of them have been consumed by the leds. It could have been *WS2813* but the main difference is that the WS2813 is resistant to the failure of one led in the middle of the strip. In the case of WS2812B, if one led is failing it will not transmit the rest of the stream and the communication will be broken. The WS2813 is slightly more expensive and I think they chose the cheapest solution considering the overall low cost of this case (under 65$).
 
+### Arduino
+I grabbed my old Diecimila Arduino board that had not be used for something like 8 years and prepared a small test setup. I struggled a bit with the Arduino on my computer and the new IDE, the Diecimila is using an ATMEGA 168 (you must explicitely indicate that in the IDE configuration) but I still could not get it to work - the upload was failing. After some googling, I found out that you  have to install some FTDI drivers (https://learn.sparkfun.com/tutorials/how-to-install-ftdi-drivers/all).
 
+<img src="https://user-images.githubusercontent.com/12449790/224155456-6408333d-b909-44c4-9687-42769fbb8161.png" width="20%" />
+
+### Preparing FastLED sketch
+There are many tutorials about interfacing an Arduino with a WS2812b strip, I picked that one which is great and pretty complete, installed the FastLED library and picked the provided sketch without any modification: https://randomnerdtutorials.com/guide-for-ws2812b-addressable-rgb-led-strip-with-arduino/
+
+It is usually wiser to use an external power supply as the leds are drawing a lot of current. I connected the +5V and GND of my power supply to the +5V and GND of the fan according to the reverse-engineered pinout. It was unclear whether it was a good idea to keep the USB connected - discussions are mixed regarding that point - so I only powered the board with the external supply after I had uploaded the sketch and deconnected the USB cable. The data line of the fan is connected to the pin 5 of the Arduino as described in the tutorial.
+
+On the picture below, you will find the pin configuration on the connectors provided with the Aerocool fans. As said before, the 12V is not connected as I was not interested into making them rotate.
+
+<img src="https://user-images.githubusercontent.com/12449790/224157893-d9a9e226-cf2c-4ca9-b017-b48bd0095aea.png" width="20%" />
+
+The fan immediately starts to display colorful patterns which are totally in line with the description of the palettes provided by the sketch in the tutorial. This was the confirmation they are using a plain WS2812b protocol and that you could reuse them for another application without particular tweaks.
+
+![image](https://user-images.githubusercontent.com/12449790/224158316-af110d06-7fef-4594-8eda-dbde8aa05a94.png)
+
+Strip pattern from the tutorial - totally matches the one displayed on the fan:
+
+![image](https://user-images.githubusercontent.com/12449790/224158504-3c7ea556-563c-4216-9bba-c37443bb112f.png)
+
+
+### Additional Pictures
+
+![image](https://user-images.githubusercontent.com/12449790/224158198-835b88aa-a8f7-41c2-8831-3bbe517c28d4.png)
+![image](https://user-images.githubusercontent.com/12449790/224158248-814045e9-ecb4-48c2-8f55-8510fe908ca8.png)
+![image](https://user-images.githubusercontent.com/12449790/224158276-06db4fbc-221b-48c1-906e-b1cdb99f7a3c.png)
+![image](https://user-images.githubusercontent.com/12449790/224159801-f362fead-0065-4ad7-adbe-57070c7b0f89.png)
